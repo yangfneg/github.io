@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>手机警报器</title>
+<style>
+:root{--bg:#080a0d;--panel:#15181d;--panel2:#20242a;--line:#303640;--text:#e9edf2;--muted:#89919d;--blue:#147cff;--orange:#ff8b0a;--red:#b43a32;--green:#48b878;--purple:#6930d9}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#050608;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{min-height:100vh;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);display:flex;justify-content:center}
+.app{width:min(100%,820px);margin:10px auto 20px;background:linear-gradient(#16191e,#0c0e11);border:2px solid #30343a;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #0008}
+.lightbar{height:52px;padding:12px 14px;display:grid;grid-template-columns:repeat(10,1fr);gap:8px;background:#08090b}
+.light{height:25px;border-radius:5px;background:#1b1f24;box-shadow:inset 0 0 0 1px #111}
+.light.blue{background:#0875ff;box-shadow:0 0 13px #0875ff}
+.light.orange{background:#ff8d08;box-shadow:0 0 13px #ff8d08}
+.title{height:72px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;letter-spacing:2px;background:linear-gradient(#292d33,#191c20);border-top:1px solid #353941;border-bottom:1px solid #101216}
+.status{padding:13px 16px;font-size:16px;color:#777f89;background:#0b0d10}.dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:#ff9800;margin-right:10px;box-shadow:0 0 12px #ff9800}
+section{padding:8px 14px 4px}
+.label{font-size:15px;color:#9ca4ae;border-left:5px solid var(--orange);padding-left:8px;margin:5px 0 9px;font-weight:700}
+.grid2,.grid3,.grid5{display:grid;gap:10px}.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}.grid5{grid-template-columns:repeat(5,1fr)}
+button{border:1px solid #343a43;background:linear-gradient(#1d2229,#12161b);color:#b9c0c9;border-radius:11px;min-height:70px;padding:10px 8px;font-size:18px;font-weight:700;box-shadow:inset 0 1px #ffffff08,0 4px 10px #0005;cursor:pointer;touch-action:manipulation}
+button small{display:block;font-size:12px;color:#707985;margin-top:5px;font-weight:500}
+button:active,.active{transform:translateY(1px);filter:brightness(1.3);box-shadow:0 0 18px #fff2,inset 0 0 20px #fff1}
+.horn{background:linear-gradient(#391b1a,#21100f);border-color:#74372f;color:#ff9d92;min-height:104px;font-size:24px}
+.broadcast{background:linear-gradient(#173223,#102218);border-color:#315c45;color:#65d990;min-height:104px;font-size:24px}
+.orange{color:#ffbd3e}.red{color:#ff756c}.blueText{color:#a9c8ff}.cyan{color:#6ee5ff}.purpleText{color:#c2a2ff}
+.big{min-height:76px}.nav button,.urgent button{min-height:72px}
+.dual{grid-column:span 1;background:linear-gradient(#5221b8,#2e146e);border-color:#8a4cff;color:#fff}
+.dualB{background:linear-gradient(#251d35,#171223);border-color:#3e3155}
+.controls button{min-height:64px}
+.footer{display:flex;justify-content:space-between;align-items:center;padding:15px 18px 18px;color:#66707d;font-size:13px}.danger{color:#ff645a}.contact{color:#4f9fff;border:1px solid #314866;padding:8px 10px;border-radius:8px}
+@media(max-width:520px){.app{margin-top:0;border-radius:16px}.title{font-size:23px;height:62px}.grid5{grid-template-columns:repeat(2,1fr)}.grid5 button:last-child{grid-column:span 2}.grid3{gap:8px}.grid3 button{font-size:15px}.grid2{gap:8px}button{font-size:16px}.horn,.broadcast{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="lightbar">
+    <i class="light blue"></i><i class="light blue"></i><i class="light blue"></i><i class="light orange"></i>
+    <i class="light"></i><i class="light"></i><i class="light"></i><i class="light"></i><i class="light"></i><i class="light"></i>
+  </div>
+  <div class="title">手机警报器</div>
+  <div class="status"><span class="dot"></span><span id="status">系统就绪</span></div>
+
+  <section>
+    <div class="label">号角与广播</div>
+    <div class="grid2">
+      <button class="horn" data-sound="horn">气笛号角<small>点按触发</small></button>
+      <button class="broadcast" id="broadcast">车外广播<small>按住录音</small></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">战术警灯</div>
+    <div class="grid5">
+      <button class="orange active" data-pattern="auto">自动联动<small>随动</small></button>
+      <button data-pattern="p1">模式 1<small>示宽</small></button>
+      <button data-pattern="p2">模式 2<small>双爆</small></button>
+      <button data-pattern="p3">模式 3<small>大循环</small></button>
+      <button data-pattern="check">拦停检车<small>前射灯</small></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">手动电笛</div>
+    <div class="grid2">
+      <button class="big orange" data-sound="high">高音电笛<small>长按抬开 / 松开落</small></button>
+      <button class="big orange" data-sound="low">低音电笛<small>长按抬开 / 飞轮拖尾</small></button>
+    </div>
+  </section>
+
+  <section class="nav">
+    <div class="label">巡航警报</div>
+    <div class="grid3">
+      <button data-siren="wail">巡航 Wail<small>标准</small></button>
+      <button data-siren="slow">慢速 Wail<small>慢速</small></button>
+      <button data-siren="fast">快速 Wail<small>快速</small></button>
+    </div>
+  </section>
+
+  <section class="urgent">
+    <div class="label">急促警报</div>
+    <div class="grid3">
+      <button data-siren="yelp">急促 Yelp<small>急促</small></button>
+      <button data-siren="chase">追击变频<small>追击</small></button>
+      <button data-siren="hyper">极速穿透<small>极速</small></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">特种与轮换</div>
+    <div class="grid3">
+      <button data-siren="piercer">战术颤音<small>高频颤音</small></button>
+      <button data-siren="hilo">救护 Hi-Lo<small>救护双音</small></button>
+      <button data-siren="random">自动<small>随机轮换</small></button>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">双音并发</div>
+    <div class="grid2">
+      <button class="dual" data-dual="a">并发 A<small>巡航 + 急促</small></button>
+      <button class="dual dualB" data-dual="b">并发 B<small>急促 + 颤音</small></button>
+    </div>
+  </section>
+
+  <section class="controls">
+    <div class="label">系统控制</div>
+    <div class="grid5">
+      <button class="orange" id="pulse">重低音脉冲<small>点击开启</small></button>
+      <button id="settings">系统设置<small>调音设置</small></button>
+      <button id="volume">低功率<small id="volText">-12dB</small></button>
+      <button class="danger" id="mute">静音<small>一键全停</small></button>
+    </div>
+  </section>
+
+  <div class="footer"><span>v1.0.0</span><span class="danger">娱乐模拟器 · 请勿用于干扰公共秩序</span><span class="contact">使用提示</span></div>
+</div>
+
+<script>
+let ctx, master, activeOsc=[], sirenTimer=null, pulseTimer=null, muted=false, volumeDb=-12;
+const $=s=>document.querySelector(s);
+function audio(){
+  if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=Math.pow(10,volumeDb/20);master.connect(ctx.destination)}
+  if(ctx.state==='suspended')ctx.resume();
+}
+function setStatus(t){$('#status').textContent=t}
+function tone(freq,dur=.2,type='sawtooth',gain=.08,delay=0){
+  audio(); const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0,ctx.currentTime+delay);g.gain.linearRampToValueAtTime(gain,ctx.currentTime+delay+.015);
+  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+delay+dur);
+  o.connect(g).connect(master);o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+dur+.03);
+}
+function horn(){
+  audio(); setStatus('气笛号角'); [110,92,73].forEach((f,i)=>tone(f,.45,'square',.09,i*.025));
+}
+function stopAll(){
+  clearInterval(sirenTimer);sirenTimer=null;clearInterval(pulseTimer);pulseTimer=null;
+  activeOsc.forEach(o=>{try{o.stop()}catch(e){}});activeOsc=[];document.querySelectorAll('.active').forEach(x=>x.classList.remove('active'));
+  setStatus(muted?'已静音':'系统就绪');
+}
+function siren(kind){
+  stopAll(); if(muted)return; audio();
+  const cfg={wail:[650,1150,1.5],slow:[500,1000,2.8],fast:[650,1250,.65],yelp:[700,1250,.32],chase:[450,1500,.2],hyper:[900,1600,.12],piercer:[1100,1450,.08],hilo:[620,950,.42]}[kind];
+  if(!cfg && kind==='random'){const a=['wail','slow','fast','yelp','chase'];return siren(a[Math.floor(Math.random()*a.length)])}
+  if(!cfg)return;
+  setStatus(kind==='wail'?'巡航 Wail':kind==='slow'?'慢速 Wail':kind==='fast'?'快速 Wail':kind==='yelp'?'急促 Yelp':kind==='chase'?'追击变频':kind==='hyper'?'极速穿透':kind==='piercer'?'战术颤音':'救护 Hi-Lo');
+  const [lo,hi,period]=cfg; let t=0;
+  sirenTimer=setInterval(()=>{t+=.08; let f;
+    if(kind==='hilo') f=Math.floor(t*2)%2?hi:lo;
+    else {const p=(t%period)/period;f=lo+(hi-lo)*(0.5-0.5*Math.cos(p*2*Math.PI));}
+    tone(f,.12,'sawtooth',.065);
+  },80);
+}
+document.querySelectorAll('[data-sound]').forEach(b=>{
+  b.addEventListener('click',()=>{ if(muted)return; if(b.dataset.sound==='horn')horn(); else tone(b.dataset.sound==='high'?620:280,.8,'square',.12); });
+  b.addEventListener('pointerdown',e=>{if(b.dataset.sound!=='horn'&& !muted){audio();setStatus(b.dataset.sound==='high'?'高音电笛':'低音电笛');}});
+});
+document.querySelectorAll('[data-siren]').forEach(b=>b.onclick=()=>siren(b.dataset.siren));
+document.querySelectorAll('[data-dual]').forEach(b=>b.onclick=()=>{siren(b.dataset.dual==='a'?'wail':'yelp');setTimeout(()=>{if(!muted)siren(b.dataset.dual==='a'?'yelp':'piercer')},650)});
+document.querySelectorAll('[data-pattern]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-pattern]').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  setStatus('警灯 '+b.textContent.trim().replace(/\s+/g,' '));
+});
+$('#pulse').onclick=()=>{if(muted)return; audio();clearInterval(pulseTimer);setStatus('重低音脉冲');pulseTimer=setInterval(()=>tone(55,.22,'sine',.2),350)};
+$('#volume').onclick=()=>{volumeDb=volumeDb===-12?-6:volumeDb===-6?0:-12;if(master)master.gain.value=Math.pow(10,volumeDb/20);$('#volText').textContent=volumeDb+'dB'};
+$('#mute').onclick=()=>{muted=!muted;if(master)master.gain.value=muted?0:Math.pow(10,volumeDb/20);if(muted)stopAll();else setStatus('系统就绪');$('#mute').firstChild.textContent=muted?'取消静音':'静音'};
+$('#settings').onclick=()=>alert('系统设置\\n\\n音量：'+volumeDb+' dB\\n音频：Web Audio API\\n提示：首次点击任意声音按钮后浏览器才会允许播放声音。');
+$('#broadcast').onclick=()=>{if(!muted){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('请注意，前方车辆，请保持安全距离。');u.lang='zh-CN';u.rate=.85;speechSynthesis.speak(u);setStatus('车外广播')}}; 
+</script>
+</body>
+</html>
